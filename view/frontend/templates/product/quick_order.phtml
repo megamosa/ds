@@ -1,0 +1,2871 @@
+<?php
+/**
+ * MagoArab_EasYorder Professional Quick Order Template - FIXED VERSION
+ *
+ * @category    MagoArab
+ * @package     MagoArab_EasYorder
+ * @author      MagoArab Development Team
+ * @copyright   Copyright (c) 2025 MagoArab
+ * @license     https://opensource.org/licenses/MIT MIT License
+ */
+
+/* @var $block \MagoArab\EasYorder\Block\Product\QuickOrder */
+
+if (!$block->canShowQuickOrder()) {
+    return;
+}
+
+$product = $block->getCurrentProduct();
+if (!$product) {
+    return;
+}
+?>
+
+<div class="magoarab-easyorder-container" id="magoarab-easyorder-form-container">
+    <div class="easyorder-header">
+        <h3 class="easyorder-title"><?= $block->escapeHtml($block->getFormTitle()) ?></h3>
+        <p class="easyorder-subtitle"><?= __('Quick Order Process') ?></p>
+    </div>
+
+    <form id="magoarab-easyorder-form" method="post" novalidate="novalidate">
+        <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>">
+        <input type="hidden" name="product_id" value="<?= $block->escapeHtmlAttr($product->getId()) ?>">
+
+        <div class="easyorder-form-content">
+            <!-- Order Note - Top of Form -->
+            <?php if ($block->shouldShowOrderNoteAt('top_form')): ?>
+            <div class="easyorder-section order-note-section">
+                <h4 class="section-title">
+                    <i class="fa fa-sticky-note"></i>
+                    <?= $block->escapeHtml($block->getOrderNoteLabel()) ?>
+                </h4>
+                <div class="field-group">
+                    <div class="field <?= $block->isOrderNoteRequired() ? 'required' : '' ?>">
+                        <div class="control">
+                            <textarea name="order_note" 
+                                      id="magoarab-order-note" 
+                                      class="input-text order-note-textarea <?= $block->isOrderNoteRequired() ? 'required-entry' : '' ?>"
+                                      placeholder="<?= $block->escapeHtmlAttr($block->getOrderNotePlaceholder()) ?>"
+                                      rows="3"
+                                      maxlength="500"
+                                      <?= $block->isOrderNoteRequired() ? 'required' : '' ?>></textarea>
+                            <div class="order-note-info">
+                                <span class="note-hint">
+                                    <i class="fa fa-info-circle"></i>
+                                    <?= __('Special notes for shipping company') ?>
+                                </span>
+                                <span class="char-counter">
+                                    <span class="order-note-counter">0</span>/500
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Product Info Section -->
+            <div class="easyorder-product-info">
+                <div class="product-summary">
+                    <span class="product-name"><?= $block->escapeHtml($product->getName()) ?></span>
+                    <span class="product-price" id="magoarab-unit-price" data-price="<?= $block->getCurrentProductPrice() ?>"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                </div>
+                
+                <!-- Product Options Section -->
+                <?php if ($product->getTypeId() === 'configurable'): ?>
+                <div class="easyorder-product-options" id="magoarab-product-options">
+                    <h4 class="section-title"><?= __('Product Options') ?></h4>
+                    <div class="product-options-container">
+                        <?= $block->getProductOptionsHtml() ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="easyorder-section">
+                <h4 class="section-title"><?= __('Customer Information') ?></h4>
+                <div class="field-group">
+                    <div class="field required">
+                        <label for="magoarab-customer-name" class="label">
+                            <span><?= __('Full Name') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-customer-name" 
+                                   name="customer_name" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter your full name')) ?>"
+                                   value="<?= $block->escapeHtmlAttr($block->getPrefilledCustomerName()) ?>"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <div class="field required">
+                        <label for="magoarab-customer-phone" class="label">
+                            <span><?= __('Phone Number') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="tel" 
+                                   id="magoarab-customer-phone" 
+                                   name="customer_phone" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter your phone number')) ?>"
+                                   value="<?= $block->escapeHtmlAttr($block->getPrefilledCustomerPhone()) ?>"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="field<?= $block->isEmailRequired() ? ' required' : '' ?>" id="magoarab-email-field" style="<?= $block->getHelperData()->isAutoGenerateEmailEnabled() ? 'visibility:hidden;height:0;margin:0;padding:0;overflow:hidden;' : '' ?>">
+                        <label for="magoarab-customer-email" class="label">
+                            <span><?= $block->isEmailRequired() ? __('Email Address') : __('Email Address (Optional)') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="email" 
+                                   id="magoarab-customer-email" 
+                                   name="customer_email" 
+                                   class="input-text<?= $block->isEmailRequired() ? ' required-entry' : '' ?>" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter your email address')) ?>"
+                                   value="<?= $block->escapeHtmlAttr($block->getPrefilledCustomerEmail()) ?>"
+                                   <?= $block->isEmailRequired() ? 'required' : '' ?>>
+                            <?php if ($block->getHelperData()->isAutoGenerateEmailEnabled()): ?>
+                                <small class="note"><?= __('Email will be auto-generated from phone if not provided') ?></small>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="easyorder-section">
+                <h4 class="section-title"><?= __('Delivery Information') ?></h4>
+                <?php /* Address selector for logged-in customers */ ?>
+                <div class="field-group" id="magoarab-address-selector" style="display:none;">
+                    <div class="field">
+                        <label class="label"><span><?= __('Use Saved Address') ?></span></label>
+                        <div class="control">
+                            <select id="magoarab-saved-addresses" class="select">
+                                <option value=""><?= __('New Address') ?></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <!-- Country -->
+                    <div class="field required" id="magoarab-country-field-wrapper">
+                        <label for="magoarab-country-id" class="label">
+                            <span><?= __('Country') ?></span>
+                        </label>
+                        <div class="control">
+                            <select id="magoarab-country-id" name="country_id" class="select required-entry" required>
+                                <option value=""><?= __('Select Country') ?></option>
+                                <?php foreach ($block->getCountries() as $country): ?>
+                                    <option value="<?= $block->escapeHtmlAttr($country['value']) ?>"
+                                            <?= $country['value'] === $block->getDefaultCountry() ? 'selected' : '' ?>>
+                                        <?= $block->escapeHtml($country['label']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Region/State -->
+                    <div class="field<?= $block->isRegionRequired() ? ' required' : '' ?>">
+                        <label for="magoarab-region-id" class="label">
+                            <span><?= __('State/Province') ?></span>
+                        </label>
+                        <div class="control">
+                            <select id="magoarab-region-id" name="region_id" class="select" style="display: none;">
+                                <option value=""><?= __('Select State/Province') ?></option>
+                            </select>
+                            <input type="text" 
+                                   id="magoarab-region" 
+                                   name="region" 
+                                   class="input-text" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter state/province')) ?>"
+                                   style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- City -->
+                    <div class="field required">
+                        <label for="magoarab-city" class="label">
+                            <span><?= __('City') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-city" 
+                                   name="city" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter city name')) ?>"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Street Address -->
+                    <div class="field required">
+                        <label for="magoarab-street-1" class="label">
+                            <span><?= __('Street Address - Line 1') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-street-1" 
+                                   name="street[]" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Building number, street name')) ?>"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Street Address Line 2 -->
+                    <?php if ($block->showStreet2()): ?>
+                    <div class="field">
+                        <label for="magoarab-street-2" class="label">
+                            <span><?= __('Street Address - Line 2 (Optional)') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-street-2" 
+                                   name="street[]" 
+                                   class="input-text" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Apartment, floor, additional info')) ?>">
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Postcode -->
+                    <div class="field" id="magoarab-postcode-field">
+                        <label for="magoarab-postcode" class="label">
+                            <span><?= __('Postal Code') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-postcode" 
+                                   name="postcode" 
+                                   class="input-text" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter postal code')) ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Note - After Address -->
+            <?php if ($block->shouldShowOrderNoteAt('after_address')): ?>
+            <div class="easyorder-section order-note-section">
+                <h4 class="section-title">
+                    <i class="fa fa-sticky-note"></i>
+                    <?= $block->escapeHtml($block->getOrderNoteLabel()) ?>
+                </h4>
+                <div class="field-group">
+                    <div class="field <?= $block->isOrderNoteRequired() ? 'required' : '' ?>">
+                        <div class="control">
+                            <textarea name="order_note" 
+                                      id="magoarab-order-note" 
+                                      class="input-text order-note-textarea <?= $block->isOrderNoteRequired() ? 'required-entry' : '' ?>"
+                                      placeholder="<?= $block->escapeHtmlAttr($block->getOrderNotePlaceholder()) ?>"
+                                      rows="3"
+                                      maxlength="500"
+                                      <?= $block->isOrderNoteRequired() ? 'required' : '' ?>></textarea>
+                            <div class="order-note-info">
+                                <span class="note-hint">
+                                    <i class="fa fa-info-circle"></i>
+                                    <?= __('Special notes for shipping company') ?>
+                                </span>
+                                <span class="char-counter">
+                                    <span class="order-note-counter">0</span>/500
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Shipping Methods -->
+            <div class="easyorder-section" id="magoarab-shipping-section" style="display: none;">
+                <h4 class="section-title"><?= __('Shipping Method') ?></h4>
+                <div class="field-group">
+                    <div class="field required">
+                        <div class="control">
+                            <div id="magoarab-shipping-methods-container">
+                                <div class="loading-message"><?= __('Loading shipping methods...') ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Note - After Shipping -->
+            <?php if ($block->shouldShowOrderNoteAt('after_shipping')): ?>
+            <div class="easyorder-section order-note-section">
+                <h4 class="section-title">
+                    <i class="fa fa-sticky-note"></i>
+                    <?= $block->escapeHtml($block->getOrderNoteLabel()) ?>
+                </h4>
+                <div class="field-group">
+                    <div class="field <?= $block->isOrderNoteRequired() ? 'required' : '' ?>">
+                        <div class="control">
+                            <textarea name="order_note" 
+                                      id="magoarab-order-note" 
+                                      class="input-text order-note-textarea <?= $block->isOrderNoteRequired() ? 'required-entry' : '' ?>"
+                                      placeholder="<?= $block->escapeHtmlAttr($block->getOrderNotePlaceholder()) ?>"
+                                      rows="3"
+                                      maxlength="500"
+                                      <?= $block->isOrderNoteRequired() ? 'required' : '' ?>></textarea>
+                            <div class="order-note-info">
+                                <span class="note-hint">
+                                    <i class="fa fa-info-circle"></i>
+                                    <?= __('Special notes for shipping company') ?>
+                                </span>
+                                <span class="char-counter">
+                                    <span class="order-note-counter">0</span>/500
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Payment Methods -->
+            <div class="easyorder-section">
+                <h4 class="section-title"><?= __('Payment Method') ?></h4>
+                <div class="field-group">
+                    <div class="field required">
+                        <div class="control">
+                            <div class="payment-methods" id="magoarab-payment-methods">
+                                <?php $paymentMethods = $block->getAvailablePaymentMethods(); ?>
+                                <?php if (!empty($paymentMethods)): ?>
+                                    <?php foreach ($paymentMethods as $index => $method): ?>
+                                        <?php 
+                                        $defaultMethod = $block->getDefaultPaymentMethod();
+                                        $isDefault = ($defaultMethod && $method['code'] === $defaultMethod) || 
+                                                   (!$defaultMethod && $index === 0);
+                                        ?>
+                                        <label class="payment-method">
+                                            <input type="radio" 
+                                                   name="payment_method" 
+                                                   value="<?= $block->escapeHtmlAttr($method['code']) ?>" 
+                                                   class="payment-radio"
+                                                   <?= $isDefault ? 'checked' : '' ?>>
+                                            <span class="payment-label">
+                                                <?= $block->escapeHtml($method['title']) ?>
+                                            </span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="no-payment-methods">
+                                        <p><?= __('No payment methods available currently') ?></p>
+                                        <small><?= __('Please check payment method settings in admin panel') ?></small>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Note - After Payment -->
+            <?php if ($block->shouldShowOrderNoteAt('after_payment')): ?>
+            <div class="easyorder-toggle-section">
+                <div class="toggle-header" data-toggle="order-note">
+                    <span class="toggle-icon">
+                        <i class="fa fa-sticky-note"></i>
+                    </span>
+                    <span class="toggle-text"><?= __('Do you want to add special notes?') ?></span>
+                    <span class="toggle-arrow">
+                        <i class="fa fa-chevron-down"></i>
+                    </span>
+                </div>
+                <div class="toggle-content" id="order-note-content" style="display: none;">
+                    <div class="field-group">
+                        <div class="field <?= $block->isOrderNoteRequired() ? 'required' : '' ?>">
+                            <label class="field-label">
+                                <?= $block->escapeHtml($block->getOrderNoteLabel()) ?>
+                                <?php if ($block->isOrderNoteRequired()): ?>
+                                <span class="required-indicator">*</span>
+                                <?php endif; ?>
+                            </label>
+                            <div class="control">
+                                <textarea name="order_note" 
+                                          id="magoarab-order-note" 
+                                          class="input-text order-note-textarea <?= $block->isOrderNoteRequired() ? 'required-entry' : '' ?>"
+                                          placeholder="<?= $block->escapeHtmlAttr($block->getOrderNotePlaceholder()) ?>"
+                                          rows="3"
+                                          maxlength="500"
+                                          <?= $block->isOrderNoteRequired() ? 'required' : '' ?>></textarea>
+                                <div class="order-note-info">
+                                    <span class="note-hint">
+                                        <i class="fa fa-info-circle"></i>
+                                        <?= __('Special notes for shipping company') ?>
+                                    </span>
+                                    <span class="char-counter">
+                                        <span class="order-note-counter">0</span>/500
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+
+
+            <!-- Quantity Section - تم نقلها هنا قبل ملخص الطلب -->
+            <div class="field required">
+                <label for="magoarab-easyorder-qty" class="label">
+                    <span><?= __('Quantity') ?></span>
+                </label>
+                <div class="control">
+                    <div class="qty-container">
+                        <button type="button" class="qty-btn minus" data-action="minus">−</button>
+                        <input type="number" 
+                               id="magoarab-easyorder-qty" 
+                               name="qty" 
+                               value="1" 
+                               min="1" 
+                               class="qty-input required-entry" 
+                               required>
+                        <button type="button" class="qty-btn plus" data-action="plus">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FIXED: Coupon Code - في المكان الصحيح بعد الكمية وقبل ملخص الطلب -->
+            <?php if ($block->isCouponCodeEnabled()): ?>
+            <div class="easyorder-toggle-section coupon-section">
+                <div class="toggle-header" data-toggle="coupon-code" tabindex="0" role="button" aria-expanded="false">
+                    <span class="toggle-icon">
+                        <i class="fa fa-percent"></i>
+                    </span>
+                    <span class="toggle-text"><?= __('Do you have a discount coupon?') ?></span>
+                    <span class="toggle-arrow">
+                        <i class="fa fa-chevron-down"></i>
+                    </span>
+                </div>
+                <div class="toggle-content" id="coupon-code-content" style="display: none;">
+                    <div class="field-group">
+                        <div class="field">
+                            <label class="field-label">
+                                <i class="fa fa-ticket-alt"></i>
+                                <?= $block->escapeHtml($block->getCouponFieldLabel()) ?>
+                            </label>
+                            <div class="control">
+                                <div class="coupon-input-container">
+                                    <input type="text" 
+                                           name="coupon_code" 
+                                           id="magoarab-coupon-code"
+                                           class="input-text coupon-input"
+                                           placeholder="<?= $block->escapeHtmlAttr($block->getCouponFieldPlaceholder()) ?>"
+                                           maxlength="50">
+                                    <button type="button" 
+                                            class="coupon-apply-btn" 
+                                            id="magoarab-apply-coupon"
+                                            title="<?= __('Apply Coupon') ?>">
+                                        <i class="fa fa-check"></i>
+                                        <?= __('Apply') ?>
+                                    </button>
+                                </div>
+                                <div class="coupon-status" id="magoarab-coupon-status" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Order Summary -->
+            <div class="easyorder-section" id="magoarab-order-summary-section">
+                <h4 class="section-title"><?= __('Order Summary') ?></h4>
+                <!-- Loading Spinner -->
+                <div class="order-summary-spinner" id="order-summary-spinner" style="display: none;">
+                    <div class="spinner-container">
+                        <div class="spinner"></div>
+                        <span><?= __('Updating...') ?></span>
+                    </div>
+                </div>
+                <div class="order-summary" id="order-summary-content">
+                    <div class="summary-row">
+                        <span class="label"><?= __('Unit Price:') ?></span>
+                        <span class="value" id="magoarab-unit-price-display"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label"><?= __('Quantity:') ?></span>
+                        <span class="value" id="magoarab-qty-display">1</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label"><?= __('Subtotal:') ?></span>
+                        <span class="value" id="magoarab-product-subtotal"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                    </div>
+                    <div class="summary-row" id="magoarab-shipping-cost-row" style="display: none;">
+                        <span class="label"><?= __('Shipping Cost:') ?></span>
+                        <span class="value" id="magoarab-shipping-cost">-</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span class="label"><?= __('Final Total:') ?></span>
+                        <span class="value" id="magoarab-order-total"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Note - Before Submit -->
+            <?php if ($block->shouldShowOrderNoteAt('before_submit')): ?>
+            <div class="easyorder-section order-note-section">
+                <h4 class="section-title">
+                    <i class="fa fa-sticky-note"></i>
+                    <?= $block->escapeHtml($block->getOrderNoteLabel()) ?>
+                </h4>
+                <div class="field-group">
+                    <div class="field <?= $block->isOrderNoteRequired() ? 'required' : '' ?>">
+                        <div class="control">
+                            <textarea name="order_note" 
+                                      id="magoarab-order-note" 
+                                      class="input-text order-note-textarea <?= $block->isOrderNoteRequired() ? 'required-entry' : '' ?>"
+                                      placeholder="<?= $block->escapeHtmlAttr($block->getOrderNotePlaceholder()) ?>"
+                                      rows="3"
+                                      maxlength="500"
+                                      <?= $block->isOrderNoteRequired() ? 'required' : '' ?>></textarea>
+                            <div class="order-note-info">
+                                <span class="note-hint">
+                                    <i class="fa fa-info-circle"></i>
+                                    <?= __('Special notes for shipping company') ?>
+                                </span>
+                                <span class="char-counter">
+                                    <span class="order-note-counter">0</span>/500
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Submit Button -->
+            <div class="easyorder-actions">
+
+                <button type="submit" 
+                        class="easyorder-submit" 
+                        id="magoarab-easyorder-submit-btn"
+                        disabled>
+                    <span><?= __('Click Here to Order') ?></span>
+                </button>
+                <div class="loading-overlay" id="magoarab-loading-overlay" style="display: none;">
+                    <div class="loader"></div>
+                    <span><?= __('Creating order...') ?></span>
+                </div>
+            </div>
+
+            <!-- Order Note - Bottom of Form -->
+            <?php if ($block->shouldShowOrderNoteAt('bottom_form')): ?>
+            <div class="easyorder-section order-note-section">
+                <h4 class="section-title">
+                    <i class="fa fa-sticky-note"></i>
+                    <?= $block->escapeHtml($block->getOrderNoteLabel()) ?>
+                </h4>
+                <div class="field-group">
+                    <div class="field <?= $block->isOrderNoteRequired() ? 'required' : '' ?>">
+                        <div class="control">
+                            <textarea name="order_note" 
+                                      id="magoarab-order-note" 
+                                      class="input-text order-note-textarea <?= $block->isOrderNoteRequired() ? 'required-entry' : '' ?>"
+                                      placeholder="<?= $block->escapeHtmlAttr($block->getOrderNotePlaceholder()) ?>"
+                                      rows="3"
+                                      maxlength="500"
+                                      <?= $block->isOrderNoteRequired() ? 'required' : '' ?>></textarea>
+                            <div class="order-note-info">
+                                <small class="note-hint">
+                                    <i class="fa fa-info-circle"></i>
+                                    <?= __('Maximum 500 characters') ?>
+                                </small>
+                                <span class="char-counter">
+                                    <span class="order-note-counter">0</span>/500
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Success Message -->
+            <div id="magoarab-success-message" class="message success" style="display: none;">
+                <div class="message-content">
+                    <strong><?= __('Order created successfully!') ?></strong>
+                    <p id="magoarab-success-text"></p>
+                    <div class="order-info">
+                        <p class="order-number">
+                            <?= __('Order Number:') ?> <span id="magoarab-order-number"></span>
+                        </p>
+                        <div id="magoarab-product-details" class="product-details">
+                            <!-- سيتم ملؤها بـ JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="magoarab-error-message" class="message error" style="display: none;">
+                <div class="message-content">
+                    <strong><?= __('An error occurred') ?></strong>
+                    <p id="magoarab-error-text"></p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+require(['jquery', 'mage/url', 'domReady!'], function($, url) {
+    var config = <?= $block->getJsonConfig() ?>;
+    var form = $('#magoarab-easyorder-form');
+    var submitBtn = $('#magoarab-easyorder-submit-btn');
+    var loadingOverlay = $('#magoarab-loading-overlay');
+    
+    // Initialize form handlers
+    initializeFormHandlers();
+    
+    function initializeFormHandlers() {
+        // Prefill when customer is logged in
+        try {
+            if (config.customer && config.customer.isLoggedIn) {
+                if (config.customer.name) {
+                    $('#magoarab-customer-name').val(config.customer.name);
+                }
+                if (config.customer.email) {
+                    $('#magoarab-customer-email').val(config.customer.email);
+                    $('#magoarab-customer-email-hidden').val(config.customer.email);
+                }
+                if (config.customer.phone) {
+                    $('#magoarab-customer-phone').val(config.customer.phone);
+                }
+                if (config.customer.address) {
+                    if (config.customer.address.country_id) {
+                        $('#magoarab-country-id').val(config.customer.address.country_id).trigger('change');
+                    }
+                    // Delay region/city filling slightly after regions load
+                    setTimeout(function() {
+                        if (config.customer.address.region_id) {
+                            $('#magoarab-region-id').val(config.customer.address.region_id).trigger('change');
+                        } else if (config.customer.address.region) {
+                            $('#magoarab-region').val(config.customer.address.region).trigger('change');
+                        }
+                        if (config.customer.address.city) {
+                            $('#magoarab-city').val(config.customer.address.city).trigger('change');
+                        }
+                        if (config.customer.address.postcode) {
+                            $('#magoarab-postcode').val(config.customer.address.postcode).trigger('change');
+                        }
+                        if (config.customer.address.street_1) {
+                            $('#magoarab-street-1').val(config.customer.address.street_1);
+                        }
+                        if (config.customer.address.street_2) {
+                            $('#magoarab-street-2').val(config.customer.address.street_2);
+                        }
+                    }, 300);
+                }
+            }
+        } catch (e) {}
+
+        // Auto-generate email from phone if enabled
+        if (config.settings && config.settings.autoGenerateEmail) {
+            var updateEmailFromPhone = function() {
+                var phone = ($('#magoarab-customer-phone').val() || '').replace(/[^0-9]/g, '');
+                if (phone.length >= 6) {
+                    var email = phone + '@' + (config.settings.emailDomain || 'example.com');
+                    $('#magoarab-customer-email-hidden').val(email);
+                    // Also set value on the hidden visible field to satisfy HTML5 required validation
+                    $('#magoarab-customer-email').val(email);
+                }
+            };
+            $('#magoarab-customer-phone').on('keyup blur change', updateEmailFromPhone);
+            updateEmailFromPhone();
+        }
+        // Quantity controls - Optimized with immediate UI update and fast calculation
+        $('.magoarab-easyorder-container .qty-btn').on('click', function() {
+            var action = $(this).data('action');
+            var qtyInput = $('#magoarab-easyorder-qty');
+            var currentQty = parseInt(qtyInput.val()) || 1;
+            
+            if (action === 'plus') {
+                qtyInput.val(currentQty + 1);
+            } else if (action === 'minus' && currentQty > 1) {
+                qtyInput.val(currentQty - 1);
+            }
+            
+            // Immediate UI update
+            updateQuantityDisplay();
+            // Fast calculation with spinner
+            optimizedUpdateCalculation();
+        });
+        
+        // Quantity input change - Fast smart update
+        $('#magoarab-easyorder-qty').on('input change', function() {
+            var qty = parseInt($(this).val()) || 1;
+            if (qty < 1) {
+                $(this).val(1);
+                qty = 1;
+            }
+            
+            // Immediate UI update
+            updateQuantityDisplay();
+            
+            // Fast debounced calculation (reduced from 1.5s to 300ms)
+            clearTimeout(calculationTimeout);
+            calculationTimeout = setTimeout(function() {
+                optimizedUpdateCalculation();
+            }, 300);
+        });
+        
+        // Country change handler - FIXED
+        $('#magoarab-country-id').on('change', function() {
+            var countryId = $(this).val();
+            console.log('Country changed to:', countryId);
+            loadRegions(countryId);
+            togglePostcodeField(countryId);
+            
+            // Load shipping methods if we have enough data
+            if (countryId && $('#magoarab-city').val()) {
+                debouncedLoadShipping();
+            }
+        });
+
+        // Hide country visually if configured but keep it in DOM with default value
+        if (config.settings && config.settings.hideCountry) {
+            var defaultCountry = config.defaultCountry || '<?= $block->escapeHtmlAttr($block->getDefaultCountry()) ?>';
+            if (defaultCountry) {
+                $('#magoarab-country-id').val(defaultCountry).trigger('change');
+            }
+            $('#magoarab-country-field-wrapper').css({ visibility: 'hidden', height: 0, margin: 0, padding: 0, overflow: 'hidden' });
+        }
+        
+        // Region change
+        $('#magoarab-region-id, #magoarab-region').on('change', function() {
+            console.log('Region changed');
+            if ($('#magoarab-country-id').val() && $('#magoarab-city').val()) {
+                loadShippingMethods();
+            }
+        });
+        
+        // Address field changes
+        $('#magoarab-city, #magoarab-street-1, #magoarab-street-2, #magoarab-postcode').on('change', function() {
+            console.log('Address field changed');
+            if ($('#magoarab-country-id').val() && $('#magoarab-city').val()) {
+                loadShippingMethods();
+            }
+        });
+        
+        // Payment method change
+        $('input[name="payment_method"]').on('change', function() {
+            checkFormValidity();
+        });
+        
+        // Shipping method change - Take price directly from selected method
+        $(document).on('change', 'input[name="shipping_method"]', function() {
+            // SIMPLE FIX: Take the shipping cost directly from the selected method
+            var selectedMethod = $(this);
+            var shippingCost = parseFloat(selectedMethod.data('cost')) || 0;
+            
+            console.log('Shipping method selected:', {
+                method: selectedMethod.val(),
+                cost: shippingCost,
+                data_cost: selectedMethod.data('cost')
+            });
+            
+            // Update shipping cost immediately
+            $('#magoarab-shipping-cost').text(formatPrice(shippingCost)).attr('data-cost', shippingCost);
+            $('#magoarab-shipping-cost-row').show();
+            
+            // Update total immediately for quick feedback
+            updateQuickTotal();
+            
+            // Then do full calculation for rules (free shipping, discounts, etc.)
+            optimizedUpdateCalculation();
+            checkFormValidity();
+        });
+        
+        // Form validation
+        form.find('input[required], select[required], textarea[required]').on('change blur', function() {
+            checkFormValidity();
+        });
+        
+        // Form submission
+        form.on('submit', function(e) {
+            e.preventDefault();
+            submitOrder();
+        });
+
+        // Build saved addresses dropdown if available
+        try {
+            if (config.customer && config.customer.isLoggedIn && Array.isArray(config.customer.addresses) && config.customer.addresses.length > 0) {
+                var sel = $('#magoarab-saved-addresses');
+                var hasDefault = false;
+                config.customer.addresses.forEach(function(addr){
+                    var opt = $('<option>').val(addr.id).text(addr.label);
+                    if (addr.is_default_shipping) { opt.attr('selected', 'selected'); hasDefault = true; }
+                    sel.append(opt);
+                });
+                $('#magoarab-address-selector').show();
+                if (hasDefault) {
+                    sel.trigger('change');
+                }
+                sel.on('change', function(){
+                    var id = $(this).val();
+                    if (!id) { return; }
+                    var addr = (config.customer.addresses || []).find(function(a){ return String(a.id) === String(id); });
+                    if (!addr) { return; }
+                    if (addr.country_id) { $('#magoarab-country-id').val(addr.country_id).trigger('change'); }
+                    setTimeout(function(){
+                        if (addr.region_id) { $('#magoarab-region-id').val(addr.region_id).trigger('change'); }
+                        else if (addr.region) { $('#magoarab-region').val(addr.region).trigger('change'); }
+                        if (addr.city) { $('#magoarab-city').val(addr.city).trigger('change'); }
+                        if (addr.postcode) { $('#magoarab-postcode').val(addr.postcode).trigger('change'); }
+                        if (addr.street_1) { $('#magoarab-street-1').val(addr.street_1); }
+                        if (addr.street_2) { $('#magoarab-street-2').val(addr.street_2); }
+                        if (addr.telephone) { $('#magoarab-customer-phone').val(addr.telephone); }
+                    }, 300);
+                });
+            }
+        } catch (e) {}
+    }
+    
+    function loadRegions(countryId) {
+        console.log('Loading regions for country:', countryId);
+        
+        if (!countryId) {
+            $('#magoarab-region-id, #magoarab-region').hide();
+            return;
+        }
+        
+        var regionSelect = $('#magoarab-region-id');
+        var regionInput = $('#magoarab-region');
+        
+        // Show loading state
+        regionSelect.html('<option value="">Loading...</option>').show();
+        regionInput.hide();
+        
+        $.get(config.urls.regions, {
+            country_id: countryId
+        })
+        .done(function(response) {
+            console.log('Regions response:', response);
+            
+            regionSelect.empty().append('<option value=""><?= __("Select State/Province") ?></option>');
+            
+            if (response.success && response.regions && response.regions.length > 0) {
+                $.each(response.regions, function(index, region) {
+                    regionSelect.append('<option value="' + region.value + '">' + region.label + '</option>');
+                });
+                regionSelect.show();
+                regionInput.hide();
+                if (config.settings.requireRegion) {
+                    regionSelect.addClass('required-entry');
+                    regionInput.removeClass('required-entry');
+                }
+            } else {
+                regionSelect.hide();
+                regionInput.show();
+                if (config.settings.requireRegion) {
+                    regionInput.addClass('required-entry');
+                    regionSelect.removeClass('required-entry');
+                }
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('Failed to load regions:', error);
+            regionSelect.hide();
+            regionInput.show();
+            if (config.settings.requireRegion) {
+                regionInput.addClass('required-entry');
+            }
+        });
+    }
+    
+    function togglePostcodeField(countryId) {
+        var postcodeField = $('#magoarab-postcode-field');
+        var postcodeInput = $('#magoarab-postcode');
+        
+        // التحقق من نوع حقل Postal Code من الإعدادات
+        var postcodeFieldType = config.settings.postcodeFieldType || 'optional';
+        
+        if (postcodeFieldType === 'hidden') {
+            // إخفاء الحقل تماماً
+            postcodeField.hide();
+            postcodeInput.removeClass('required-entry');
+        } else if (postcodeFieldType === 'required') {
+            postcodeField.show();
+            postcodeField.addClass('required');
+            postcodeInput.addClass('required-entry');
+            postcodeField.find('.label span').text('Postal Code *');
+        } else {
+            // optional
+            postcodeField.show();
+            postcodeField.removeClass('required');
+            postcodeInput.removeClass('required-entry');
+            postcodeField.find('.label span').text('Postal Code (Optional)');
+        }
+    }
+    
+    function loadShippingMethods() {
+        var countryId = $('#magoarab-country-id').val();
+        var regionId = $('#magoarab-region-id').val();
+        var region = $('#magoarab-region').val();
+        var postcode = $('#magoarab-postcode').val();
+        var city = $('#magoarab-city').val();
+        var phone = $('#magoarab-customer-phone').val();
+        
+        console.log('Loading shipping methods with data:', {
+            country_id: countryId,
+            region_id: regionId,
+            region: region,
+            city: city,
+            postcode: postcode,
+            phone: phone
+        });
+        
+        var finalRegion = region || regionId;
+        
+        // التحقق من اختيار المحافظة قبل إرسال الطلب
+        if (!countryId || !finalRegion) {
+            $('#magoarab-shipping-methods-container').html(`
+                <div class="select-region-message">
+                    <i class="fa fa-info-circle"></i>
+                    <p>Please select your governorate to view available shipping methods</p>
+                    <small>اختر المحافظة لعرض طرق الشحن المتاحة</small>
+                </div>
+            `);
+            return;
+        }
+        
+        $('#magoarab-shipping-section').show();
+        
+        // إظهار مؤشر التحميل
+        $('#magoarab-shipping-methods-container').html(`
+            <div class="shipping-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading shipping methods...</p>
+            </div>
+        `);
+        
+        $.post({
+            url: config.urls.shipping,
+            data: {
+                product_id: config.productId,
+                country_id: countryId,
+                region_id: regionId,
+                region: region,
+                postcode: postcode,
+                city: city,
+                phone: phone,
+                qty: parseInt($('#magoarab-easyorder-qty').val()) || 1,
+                form_key: $('input[name="form_key"]').val()
+            },
+            timeout: 15000
+        })
+        .done(function(response) {
+            console.log('Shipping methods response:', response);
+            hideOrderSummarySpinner(); // Hide spinner on success
+            handleShippingResponse(response);
+        })
+        .fail(function(xhr, status, error) {
+            console.error('Shipping methods failed:', error);
+            hideOrderSummarySpinner(); // Hide spinner on error
+            var errorMsg = 'Error loading shipping methods. Please try again.';
+            if (status === 'timeout') {
+                errorMsg = 'Request timeout. Please check your connection and try again.';
+            }
+            $('#magoarab-shipping-methods-container').html(`
+                <div class="shipping-error">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <p>${errorMsg}</p>
+                    <button type="button" class="retry-shipping-btn" onclick="loadShippingMethods()">Try Again</button>
+                </div>
+            `);
+        });
+    }
+
+    function handleShippingResponse(response) {
+        if (response.success && response.shipping_methods && response.shipping_methods.length > 0) {
+            var html = '<div class="shipping-methods-list">';
+            
+            console.log('CRITICAL DEBUG: Shipping methods from server:', response.shipping_methods);
+            
+            response.shipping_methods.forEach(function(method, index) {
+                var isChecked = index === 0 ? 'checked' : '';
+                var priceFormatted = method.price_formatted || formatPrice(method.price);
+                
+                console.log('CRITICAL DEBUG: Processing shipping method:', {
+                    code: method.code,
+                    title: method.title,
+                    price: method.price,
+                    price_formatted: priceFormatted
+                });
+                
+                html += `
+                    <label class="shipping-method-option">
+                        <input type="radio" 
+                               name="shipping_method" 
+                               value="${method.code}" 
+                               class="shipping-radio" 
+                               data-cost="${method.price}"
+                               ${isChecked}>
+                        <div class="method-info">
+                            <span class="method-title">${method.carrier_title || method.title}</span>
+                            <span class="method-description">${method.title}</span>
+                        </div>
+                        <span class="method-price">${priceFormatted}</span>
+                    </label>
+                `;
+            });
+            
+            html += '</div>';
+            $('#magoarab-shipping-methods-container').html(html);
+            
+            // Auto-select first method
+            $('input[name="shipping_method"]:first').trigger('change');
+            
+        } else {
+            var errorMsg = response.message || 'No shipping methods available for this location';
+            $('#magoarab-shipping-methods-container').html(`
+                <div class="no-shipping-methods">
+                    <i class="fa fa-shipping-fast"></i>
+                    <p>${errorMsg}</p>
+                    <small>Please verify your address details or contact our support team</small>
+                    <button type="button" class="retry-shipping-btn" onclick="loadShippingMethods()">Retry</button>
+                </div>
+            `);
+        }
+    }
+    
+
+    
+function updateCalculation() {
+    // Use the optimized version for better performance and spinner
+    optimizedUpdateCalculation();
+}
+
+function performActualCalculation() {
+    var shippingMethod = $('input[name="shipping_method"]:checked').val();
+    if (!shippingMethod) return;
+    
+    var formKey = $('input[name="form_key"]').val();
+    if (!formKey) {
+        console.error('Form key not found');
+        return;
+    }
+    
+    var qty = parseInt($('#magoarab-easyorder-qty').val()) || 1;
+    
+    // Get selected product options for configurable products
+    var superAttribute = {};
+    $('.product-option-select').each(function() {
+        var attributeId = $(this).attr('name').match(/\[(\d+)\]/);
+        if (attributeId && $(this).val()) {
+            superAttribute[attributeId[1]] = $(this).val();
+        }
+    });
+    
+    var postData = {
+        product_id: config.productId,
+        qty: qty,
+        shipping_method: shippingMethod,
+        country_id: $('#magoarab-country-id').val(),
+        region: $('#magoarab-region').val() || $('#magoarab-region-id').val(),
+        postcode: $('#magoarab-postcode').val(),
+        form_key: formKey
+    };
+    
+    // Add product options if available
+    if (Object.keys(superAttribute).length > 0) {
+        postData.super_attribute = superAttribute;
+    }
+    
+    // Add coupon code if exists
+    var couponCode = $('#coupon-code').val();
+    if (couponCode) {
+        postData.coupon_code = couponCode;
+    }
+    
+    // Create cache key for this calculation
+    var cacheKey = JSON.stringify(postData);
+    
+    // Check cache first
+    if (calculationCache[cacheKey]) {
+        console.log('Using cached calculation result');
+        updateOrderSummaryWithCalculation(calculationCache[cacheKey]);
+        return;
+    }
+    
+    console.log('Sending calculation request:', postData);
+    
+    $.ajax({
+        url: config.urls.calculate,
+        type: 'POST',
+        data: postData,
+        dataType: 'json',
+        cache: false,
+        success: function(response) {
+            console.log('Calculation response:', response);
+            
+            if (response.success && response.calculation) {
+                // Cache the result
+                calculationCache[cacheKey] = response.calculation;
+                updateOrderSummaryWithCalculation(response.calculation);
+            } else {
+                console.error('Calculation failed:', response.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Calculation AJAX Error:', {
+                status: xhr.status,
+                error: error,
+                response: xhr.responseText
+            });
+        }
+    });
+}
+    
+function updateOrderSummaryWithCalculation(calculation) {
+    console.log('Updating order summary with calculation:', calculation);
+    console.log('Discount details:', {
+        discount_amount: calculation.discount_amount,
+        applied_rule_ids: calculation.applied_rule_ids,
+        has_discount: calculation.has_discount
+    });
+    
+    // Verify calculation data
+    if (!calculation || typeof calculation !== 'object') {
+        console.error('Invalid calculation data received');
+        return;
+    }
+    
+    // Update unit price display
+    if (calculation.product_price !== undefined) {
+        var formattedProductPrice = formatPrice(calculation.product_price);
+        $('#magoarab-unit-price-display').text(formattedProductPrice);
+        $('#magoarab-unit-price').attr('data-price', calculation.product_price);
+    }
+    
+    // Update subtotal
+    if (calculation.subtotal !== undefined) {
+        $('#magoarab-product-subtotal').text(formatPrice(calculation.subtotal));
+        console.log('Updated subtotal to:', calculation.subtotal);
+    }
+    
+    // Update shipping cost with data attributes for calculations
+    if (calculation.shipping_cost !== undefined) {
+        // CRITICAL: This is the final shipping cost after applying all rules
+        // including free shipping, cart rules, etc.
+        $('#magoarab-shipping-cost').text(formatPrice(calculation.shipping_cost))
+                                    .attr('data-cost', calculation.shipping_cost);
+        $('#magoarab-shipping-cost-row').show();
+        
+        // Update the selected shipping method's data-cost to reflect rules
+        var selectedMethod = $('input[name="shipping_method"]:checked');
+        if (selectedMethod.length) {
+            selectedMethod.attr('data-cost', calculation.shipping_cost);
+        }
+        
+        // Log for debugging
+        console.log('Updated shipping cost with rules applied:', {
+            raw_cost: calculation.shipping_cost,
+            formatted_cost: formatPrice(calculation.shipping_cost),
+            shipping_method: selectedMethod.val(),
+            original_data_cost: selectedMethod.data('cost')
+        });
+    }
+
+    // Show/hide discount row based on calculation
+    if (calculation.discount_amount !== undefined) {
+        // Always create discount row if it doesn't exist
+        if (!$('#magoarab-discount-row').length) {
+            $('#magoarab-shipping-cost-row').after(`
+                <div class="summary-row" id="magoarab-discount-row">
+                    <span class="label"><?= __('Discount:') ?></span>
+                    <span class="value" id="magoarab-discount-amount">-</span>
+                </div>
+            `);
+        }
+        
+        // Show discount row based on actual discount amount or active rules
+        var discountAmount = parseFloat(calculation.discount_amount) || 0;
+        var hasActiveDiscount = discountAmount > 0;
+        var hasAppliedRules = calculation.applied_rule_ids && calculation.applied_rule_ids.length > 0;
+        
+        console.log('Discount evaluation:', {
+            discount_amount: discountAmount,
+            applied_rule_ids: calculation.applied_rule_ids,
+            has_active_discount: hasActiveDiscount,
+            has_applied_rules: hasAppliedRules
+        });
+        
+        if (hasActiveDiscount) {
+            // Show actual discount
+            $('#magoarab-discount-amount').text('-' + formatPrice(discountAmount))
+                                          .attr('data-discount', discountAmount);
+            $('#magoarab-discount-row').show();
+            console.log('Discount row shown with amount:', discountAmount);
+        } else if (hasAppliedRules) {
+            // Show zero discount but indicate rules are active
+            $('#magoarab-discount-amount').text(formatPrice(0))
+                                          .attr('data-discount', 0);
+            $('#magoarab-discount-row').show();
+            console.log('Discount row shown with 0 amount (rules active)');
+        } else {
+            // Hide discount row
+            $('#magoarab-discount-row').hide();
+            console.log('Discount row hidden (no discount/rules)');
+        }
+    } else {
+        // Hide discount row if no discount info available
+        $('#magoarab-discount-row').hide();
+    }
+    
+    // Update final total
+    if (calculation.total !== undefined) {
+        $('#magoarab-order-total').text(formatPrice(calculation.total));
+    }
+    
+    // Update quantity display
+    var qty = parseInt($('#magoarab-easyorder-qty').val()) || 1;
+    $('#magoarab-qty-display').text(qty);
+    
+    // Update final total if we have all required values
+    if (calculation.total !== undefined) {
+        $('#magoarab-order-total').text(formatPrice(calculation.total));
+        console.log('Updated grand total to:', calculation.total);
+    }
+    
+    console.log('Order summary updated successfully');
+}
+    
+    function checkFormValidity() {
+        var isValid = true;
+        
+        // Check required fields
+        form.find('input[required], select[required], textarea[required]').each(function() {
+            if (!$(this).val().trim()) {
+                isValid = false;
+                return false;
+            }
+        });
+        
+        // Check shipping method selection
+        if (!$('input[name="shipping_method"]:checked').length) {
+            isValid = false;
+        }
+        
+        // Check payment method selection
+        if (!$('input[name="payment_method"]:checked').length) {
+            isValid = false;
+        }
+        
+        // Check product options only if they exist (for configurable products)
+        var productOptionsExist = $('.product-option-select').length > 0;
+        if (productOptionsExist) {
+            var allOptionsSelected = true;
+            $('.product-option-select').each(function() {
+                if (!$(this).val()) {
+                    allOptionsSelected = false;
+                    return false;
+                }
+            });
+            if (!allOptionsSelected) {
+                isValid = false;
+            }
+        }
+        
+        submitBtn.prop('disabled', !isValid);
+        return isValid;
+    }
+    
+    // متغيرات لتتبع حالة الزر
+    var buttonDisabledTimeout;
+    var isOrderProcessing = false;
+    var lastUpdateTime = Date.now();
+    
+    // متغير لحفظ قيم الملخص قبل الإرسال
+    var prePlaceOrderSummary = null;
+    
+    // Cache للحسابات لتجنب البطء
+    var calculationCache = {};
+    var calculationTimeout = null;
+    var isCalculating = false;
+    
+    // ===== OPTIMIZED FUNCTIONS FOR BETTER PERFORMANCE =====
+    
+    // Fast quantity display update without waiting for calculations
+    function updateQuantityDisplay() {
+        var qty = parseInt($('#magoarab-easyorder-qty').val()) || 1;
+        
+        // Immediate quantity display update
+        $('#magoarab-qty-display').text(qty);
+        
+        // Quick subtotal calculation for immediate feedback
+        var unitPrice = parseFloat($('#magoarab-unit-price').attr('data-price')) || 0;
+        if (unitPrice > 0) {
+            var newSubtotal = unitPrice * qty;
+            $('#magoarab-product-subtotal').text(formatPrice(newSubtotal));
+            
+            // Quick update using current shipping cost
+            updateQuickTotal();
+            
+            // Trigger full calculation for rules validation
+            setTimeout(function() {
+                var shippingMethod = $('input[name="shipping_method"]:checked').val();
+                if (shippingMethod) {
+                    optimizedUpdateCalculation();
+                }
+            }, 100);
+        }
+    }
+    
+    // Show/hide spinner for order summary
+    function showOrderSummarySpinner() {
+        if (!isCalculating) {
+            isCalculating = true;
+            $('#order-summary-spinner').show();
+            $('#order-summary-content').addClass('updating');
+        }
+    }
+    
+    function hideOrderSummarySpinner() {
+        isCalculating = false;
+        $('#order-summary-spinner').hide();
+        $('#order-summary-content').removeClass('updating');
+    }
+    
+    // Quick total calculation for immediate feedback
+    function updateQuickTotal() {
+        var unitPrice = parseFloat($('#magoarab-unit-price').attr('data-price')) || 0;
+        var qty = parseInt($('#magoarab-easyorder-qty').val()) || 1;
+        var shippingCost = parseFloat($('#magoarab-shipping-cost').attr('data-cost')) || 0;
+        var discountAmount = parseFloat($('#magoarab-discount-amount').attr('data-discount')) || 0;
+        
+        var subtotal = unitPrice * qty;
+        var total = subtotal + shippingCost - discountAmount;
+        
+        // Update displays
+        $('#magoarab-product-subtotal').text(formatPrice(subtotal));
+        $('#magoarab-order-total').text(formatPrice(total));
+        
+        console.log('Quick total updated:', {
+            unit_price: unitPrice,
+            qty: qty,
+            subtotal: subtotal,
+            shipping_cost: shippingCost,
+            discount: discountAmount,
+            total: total
+        });
+    }
+    
+    // Optimized calculation with better performance
+    function optimizedUpdateCalculation() {
+        // Show spinner immediately
+        showOrderSummarySpinner();
+        
+        // Get form data efficiently
+        var shippingMethod = $('input[name="shipping_method"]:checked').val();
+        if (!shippingMethod) {
+            hideOrderSummarySpinner();
+            return;
+        }
+        
+        var postData = {
+            product_id: config.productId,
+            qty: parseInt($('#magoarab-easyorder-qty').val()) || 1,
+            shipping_method: shippingMethod,
+            country_id: $('#magoarab-country-id').val(),
+            region_id: $('#magoarab-region-id').val() || '',
+            region: $('#magoarab-region').val() || '',
+            city: $('#magoarab-city').val() || '',
+            postcode: $('#magoarab-postcode').val() || '',
+            form_key: $('input[name="form_key"]').val()
+        };
+        
+        // Add product options if configurable
+        var superAttribute = {};
+        $('.product-option-select').each(function() {
+            if ($(this).val()) {
+                superAttribute[$(this).attr('name').replace('super_attribute[', '').replace(']', '')] = $(this).val();
+            }
+        });
+        if (Object.keys(superAttribute).length > 0) {
+            postData.super_attribute = superAttribute;
+        }
+        
+        // Add coupon if exists
+        var couponCode = $('#coupon-code').val();
+        if (couponCode) {
+            postData.coupon_code = couponCode;
+        }
+        
+        // IMPORTANT: Add super_attribute for price rules calculation
+        if (Object.keys(superAttribute).length > 0) {
+            postData.super_attribute = superAttribute;
+        }
+        
+        // IMPORTANT: Avoid cache for price rules to ensure accurate calculations
+        // Cache disabled when super_attribute or coupon_code exists to ensure fresh price rule calculations
+        var cacheKey = JSON.stringify(postData);
+        var shouldUseCache = !postData.super_attribute && !postData.coupon_code;
+        
+        if (shouldUseCache && calculationCache[cacheKey]) {
+            updateOrderSummaryWithCalculation(calculationCache[cacheKey]);
+            hideOrderSummarySpinner();
+            return;
+        }
+        
+        // AJAX request with optimized settings
+        $.ajax({
+            url: config.urls.calculate,
+            type: 'POST',
+            data: postData,
+            dataType: 'json',
+            cache: false,
+            timeout: 10000, // Reduced timeout for faster response
+            success: function(response) {
+                hideOrderSummarySpinner();
+                
+                if (response.success && response.calculation) {
+                    // Cache only simple calculations (no price rules involved)
+                    if (shouldUseCache) {
+                        calculationCache[cacheKey] = response.calculation;
+                        // Limit cache size to prevent memory issues
+                        if (Object.keys(calculationCache).length > 20) {
+                            var firstKey = Object.keys(calculationCache)[0];
+                            delete calculationCache[firstKey];
+                        }
+                    }
+                    
+                    updateOrderSummaryWithCalculation(response.calculation);
+                } else {
+                    console.error('Calculation failed:', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                hideOrderSummarySpinner();
+                console.error('Calculation AJAX Error:', error);
+            }
+        });
+    }
+
+    function submitOrder() {
+        if (!checkFormValidity()) {
+            showErrorMessage('يرجى ملء جميع الحقول المطلوبة');
+            return;
+        }
+        
+        // منع الإرسال المتكرر
+        if (isOrderProcessing) {
+            return;
+        }
+        
+        // حفظ قيم الملخص الصحيحة من Order Summary Section
+        prePlaceOrderSummary = {
+            unitPrice: $('#magoarab-unit-price-display').text(),
+            qty: $('#magoarab-qty-display').text(),
+            subtotal: $('#magoarab-product-subtotal').text(),
+            shipping: $('#magoarab-shipping-cost').text() || 'ج.م.‏0.00',
+            discount: $('#magoarab-discount-amount').text() || '',
+            grandTotal: $('#magoarab-order-total').text()
+        };
+        
+        // إضافة القيم الرقمية للإرسال مع الطلب
+        var orderSummaryData = {
+            frontend_subtotal: parseFloat($('#magoarab-product-subtotal').text().replace(/[^\d.-]/g, '') || 0),
+            frontend_shipping: parseFloat($('#magoarab-shipping-cost').text().replace(/[^\d.-]/g, '') || 0),
+            frontend_discount: parseFloat($('#magoarab-discount-amount').text().replace(/[^\d.-]/g, '') || 0),
+            frontend_grand_total: parseFloat($('#magoarab-order-total').text().replace(/[^\d.-]/g, '') || 0),
+            frontend_qty: parseInt($('#magoarab-qty-display').text()) || 1
+        };
+        
+        console.log('Pre-order summary saved:', prePlaceOrderSummary);
+        console.log('Order summary data for backend:', orderSummaryData);
+        
+        isOrderProcessing = true;
+        var formData = form.serialize();
+        
+        // Add product options only if they exist
+        var productOptionsExist = $('.product-option-select').length > 0;
+        if (productOptionsExist) {
+            var productOptions = {};
+            $('.product-option-select').each(function() {
+                var attributeId = $(this).attr('name').match(/\[(\d+)\]/)[1];
+                var optionId = $(this).val();
+                if (optionId) {
+                    productOptions[attributeId] = optionId;
+                }
+            });
+            
+            if (Object.keys(productOptions).length > 0) {
+                formData += '&' + $.param({super_attribute: productOptions});
+            }
+        }
+        
+        // إضافة قيم Order Summary الصحيحة إلى الطلب
+        formData += '&' + $.param(orderSummaryData);
+        
+        // تعطيل الزر ومنع الإرسال المتكرر
+        disableSubmitButton();
+        hideMessages();
+        
+        $.ajax({
+            url: config.urls.submit,
+            type: 'POST',
+            data: formData,
+            timeout: 30000,
+            success: function(response) {
+                loadingOverlay.hide();
+                isOrderProcessing = false;
+                
+                if (response.success) {
+                    // إظهار رسالة النجاح مع تفاصيل المنتج
+                    showSuccessMessageWithYouTubeConfetti(
+                        response.message || 'تم إنشاء الطلب بنجاح!', 
+                        response.increment_id,
+                        response.product_details,
+                        response.summary
+                    );
+                    
+                    // تعطيل الزر نهائياً وتغيير النص
+                    submitBtn.removeClass('processing');
+                    submitBtn.addClass('completed');
+                    submitBtn.html('<span>✓ تم إنشاء الطلب بنجاح</span>');
+                    
+                    // FIXED: تعطيل الزر لأكثر من 10 ثوانٍ ويتفك عند التحديث
+                    setExtendedButtonDisable();
+                } else {
+                    showErrorMessage(response.message || 'خطأ في إنشاء الطلب');
+                    resetSubmitButton();
+                }
+            },
+            error: function(xhr, status, error) {
+                loadingOverlay.hide();
+                isOrderProcessing = false;
+                var errorMessage = 'خطأ في إنشاء الطلب';
+                
+                if (status === 'timeout') {
+                    errorMessage = 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                showErrorMessage(errorMessage);
+                resetSubmitButton();
+            }
+        });
+    }
+
+    function disableSubmitButton() {
+        submitBtn.prop('disabled', true);
+        submitBtn.addClass('processing');
+        submitBtn.html('<span class="processing-text">جارٍ إنشاء الطلب...</span><div class="processing-spinner"></div>');
+        loadingOverlay.show();
+    }
+
+    // FIXED: تحسين إدارة زر الإرسال لمنع الطلبات المتكررة
+    function setExtendedButtonDisable() {
+        // تسجيل وقت آخر طلب
+        lastUpdateTime = Date.now();
+        
+        // تعطيل الزر لمدة 45 ثانية (أكثر من 30 ثانية كما طلب المستخدم)
+        var disableDuration = 45000; // 45 ثانية
+        
+        // إضافة visual feedback للمستخدم
+        submitBtn.addClass('extended-disabled');
+        submitBtn.html(`
+            <span class="disabled-text">
+                <i class="fa fa-clock-o"></i>
+                تم إنشاء الطلب بنجاح - الزر معطل لمنع الطلبات المتكررة
+            </span>
+            <div class="countdown-timer" id="countdown-timer"></div>
+        `);
+        
+        // إضافة عداد تنازلي
+        var remainingTime = disableDuration / 1000; // بالثواني
+        var countdownInterval = setInterval(function() {
+            remainingTime--;
+            $('#countdown-timer').text(`سيتم تفعيل الزر خلال: ${remainingTime} ثانية`);
+            
+            if (remainingTime <= 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+        
+        // تعطيل الزر لمدة 45 ثانية
+        buttonDisabledTimeout = setTimeout(function() {
+            // التحقق من عدم حدوث تحديث في النموذج
+            var timeSinceLastUpdate = Date.now() - lastUpdateTime;
+            if (timeSinceLastUpdate >= disableDuration) {
+                enableSubmitButtonAfterDelay();
+                clearInterval(countdownInterval);
+            } else {
+                // إذا حدث تحديث، أعد جدولة التفعيل
+                setExtendedButtonDisable();
+            }
+        }, disableDuration);
+    }
+
+    function enableSubmitButtonAfterDelay() {
+        // إزالة الكلاسات والتأثيرات
+        submitBtn.removeClass('processing completed extended-disabled');
+        submitBtn.prop('disabled', false);
+        
+        // إعادة النص الأصلي مع تأثير بصري
+        submitBtn.html(`
+            <span class="enabled-text">
+                <i class="fa fa-shopping-cart"></i>
+                اضغط هنا للطلب
+            </span>
+        `);
+        
+        // تأثير بصري لإظهار أن الزر أصبح نشطاً
+        submitBtn.addClass('re-enabled');
+        setTimeout(() => {
+            submitBtn.removeClass('re-enabled');
+        }, 2000);
+        
+        // إعادة تعيين النموذج جزئياً (بدون مسح البيانات المهمة)
+        $('#magoarab-success-message').fadeOut();
+        // لا نخفي الفورم - نتركه ظاهر للطلبات المتعددة
+        // $('#magoarab-easyorder-form').fadeIn();
+        
+        // إعادة تحميل طرق الشحن إذا كانت متوفرة
+        var shippingMethod = $('input[name="shipping_method"]:checked').val();
+        if (shippingMethod) {
+            updateCalculation();
+        }
+        
+        // إعادة تعيين المتغيرات
+        isOrderProcessing = false;
+        lastUpdateTime = Date.now();
+        
+        // إظهار رسالة للمستخدم
+        showInfoMessage('يمكنك الآن إجراء طلب جديد', 3000);
+    }
+
+    function resetSubmitButton() {
+        // إلغاء timeout إذا كان موجوداً
+        if (buttonDisabledTimeout) {
+            clearTimeout(buttonDisabledTimeout);
+        }
+        
+        submitBtn.prop('disabled', false);
+        submitBtn.removeClass('processing completed');
+        submitBtn.html('<span>اضغط هنا للطلب</span>');
+        loadingOverlay.hide();
+        isOrderProcessing = false;
+    }
+
+    // تتبع التحديثات في النموذج لإعادة تفعيل الزر فوراً عند التعديل
+    function trackFormUpdates() {
+        // تحديث الوقت عند تغيير أي حقل مهم
+        form.on('change input', 'input[type="number"], select[name="shipping_method"], select[name="payment_method"]', function() {
+            lastUpdateTime = Date.now();
+            
+            // إذا كان الزر معطلاً بسبب طلب سابق، فعله فوراً عند التحديث المهم
+            if (submitBtn.hasClass('extended-disabled') && buttonDisabledTimeout) {
+                clearTimeout(buttonDisabledTimeout);
+                enableSubmitButtonAfterDelay();
+                showInfoMessage('تم تفعيل الزر بسبب تعديل الطلب', 2000);
+            }
+        });
+        
+                    // Smart quantity update - Fast response with optimized calculation
+        $('#magoarab-easyorder-qty').on('input change', function() {
+            var qty = parseInt($(this).val()) || 1;
+            if (qty < 1) {
+                $(this).val(1);
+                qty = 1;
+            }
+            
+            // Immediate UI update
+            updateQuantityDisplay();
+            
+            // Fast optimized calculation with reduced delay
+            clearTimeout(calculationTimeout);
+            calculationTimeout = setTimeout(function() {
+                var shippingMethod = $('input[name="shipping_method"]:checked').val();
+                if (shippingMethod) {
+                    optimizedUpdateCalculation();
+                }
+            }, 300); // Reduced from 1000ms to 300ms
+            
+            lastUpdateTime = Date.now();
+        });
+    }
+    
+    function showSuccessMessage(message, orderNumber) {
+        $('#magoarab-success-text').text(message);
+        if (orderNumber) {
+            $('#magoarab-order-number').text(orderNumber);
+        }
+        $('#magoarab-success-message').show();
+        $('html, body').animate({
+            scrollTop: $('#magoarab-success-message').offset().top - 50
+        }, 500);
+    }
+    
+    function showErrorMessage(message) {
+        $('#magoarab-error-text').text(message);
+        $('#magoarab-error-message').show();
+        $('html, body').animate({
+            scrollTop: $('#magoarab-error-message').offset().top - 50
+        }, 500);
+    
+        // Hide message automatically after 10 seconds
+        setTimeout(function() {
+            $('#magoarab-error-message').fadeOut();
+        }, 10000);
+    }
+    
+    function hideMessages() {
+        $('#magoarab-success-message, #magoarab-error-message').hide();
+    }
+    
+    // تحسين دالة formatPrice أيضاً
+    function formatPrice(price) {
+        var currencySymbol = config.currency.symbol;
+        var precision = config.currency.precision || 2;
+        
+        // تحويل الأرقام العربية إلى إنجليزية
+        var priceStr = price.toString()
+            .replace(/[٠-٩]/g, function(d) {
+                return '٠١٢٣٤٥٦٧٨٩'.indexOf(d);
+            });
+        
+        var numericPrice = parseFloat(priceStr) || 0;
+        
+        // التأكد من أن الرقم منطقي
+        if (numericPrice < 0 || numericPrice > 1000000) {
+            console.warn('Suspicious price value:', numericPrice, 'from:', price);
+        }
+        
+        var formattedPrice = numericPrice.toFixed(precision);
+        return currencySymbol + formattedPrice;
+    }
+    
+    // دالة لإظهار رسائل معلوماتية
+    function showInfoMessage(message, duration = 5000) {
+        var infoDiv = $(`
+            <div class="info-message" style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #2196F3;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                z-index: 9999;
+                font-weight: bold;
+            ">
+                <i class="fa fa-info-circle"></i> ${message}
+            </div>
+        `);
+        
+        $('body').append(infoDiv);
+        
+        setTimeout(() => {
+            infoDiv.fadeOut(() => {
+                infoDiv.remove();
+            });
+        }, duration);
+    }
+    
+    // Initialize on page load
+    checkFormValidity();
+    
+    // تهيئة تتبع التحديثات
+    trackFormUpdates();
+    
+    // Auto-load regions and shipping if country is pre-selected
+    var initialCountry = $('#magoarab-country-id').val();
+    if (initialCountry) {
+        loadRegions(initialCountry);
+        togglePostcodeField(initialCountry);
+    }
+    
+    // Product options change handler
+    $(document).on('change', '.product-option-select', function() {
+        updateProductPrice();
+        checkFormValidity();
+    });
+    
+    function updateProductPrice() {
+        var selectedOptions = {};
+        $('.product-option-select').each(function() {
+            var attributeId = $(this).attr('name').match(/\[(\d+)\]/)[1];
+            var optionId = $(this).val();
+            if (optionId) {
+                selectedOptions[attributeId] = optionId;
+            }
+        });
+        
+        // Update price based on selected options
+        if (Object.keys(selectedOptions).length > 0) {
+            $.ajax({
+                url: config.urls.getPrice,
+                type: 'POST',
+                data: {
+                    product_id: config.productId,
+                    super_attribute: selectedOptions,
+                    form_key: $('input[name="form_key"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#magoarab-unit-price').attr('data-price', response.price).text(response.formatted_price);
+                        $('#magoarab-unit-price-display').text(response.formatted_price);
+                        
+                        // تم إلغاء التحديث التلقائي لتجنب البطء
+                        // var shippingMethod = $('input[name="shipping_method"]:checked').val();
+                        // if (shippingMethod) {
+                        //     updateCalculation();
+                        // }
+                    }
+                }
+            });
+        }
+    }
+    
+    // متغير لحفظ timeout
+    var shippingTimeout;
+    
+    function debouncedLoadShipping() {
+        // Cancel previous request if exists
+        if (shippingTimeout) {
+            clearTimeout(shippingTimeout);
+        }
+        
+        // Show spinner for shipping recalculation
+        showOrderSummarySpinner();
+        
+        // Reduced delay for faster response (from 500ms to 200ms)
+        shippingTimeout = setTimeout(function() {
+            loadShippingMethods();
+        }, 200);
+    }
+    
+    // استخدام الدالة المحسنة في event handlers
+    $('#magoarab-country-id, #magoarab-region-id, #magoarab-city').on('change', function() {
+        debouncedLoadShipping();
+    });
+    
+    // تأثير فرقعة محسن مثل يوتيوب
+    function createYouTubeStyleConfetti() {
+        const colors = ['#FF6B35', '#F7931E', '#FFD23F', '#06FFA5', '#118AB2', '#073B4C', '#EF476F'];
+        const shapes = ['circle', 'square', 'triangle'];
+        const confettiCount = 100;
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            
+            confetti.className = `confetti-piece confetti-${shape}`;
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-10px';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            
+            // إضافة حركة دوران عشوائية
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+            
+            document.body.appendChild(confetti);
+            
+            // إزالة القطعة بعد انتهاء الحركة
+            setTimeout(() => {
+                if (confetti.parentNode) {
+                    confetti.parentNode.removeChild(confetti);
+                }
+            }, 6000);
+        }
+        
+        // إضافة تأثير انفجار من المركز
+        createCenterBurst();
+    }
+    
+    function createCenterBurst() {
+        const burstCount = 20;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        
+        for (let i = 0; i < burstCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'burst-particle';
+            
+            const angle = (i / burstCount) * 2 * Math.PI;
+            const velocity = 100 + Math.random() * 100;
+            
+            particle.style.left = centerX + 'px';
+            particle.style.top = centerY + 'px';
+            particle.style.setProperty('--end-x', Math.cos(angle) * velocity + 'px');
+            particle.style.setProperty('--end-y', Math.sin(angle) * velocity + 'px');
+            
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 2000);
+        }
+    }
+    
+    function showSuccessMessageWithYouTubeConfetti(message, orderNumber, productDetails, summary) {
+        // FIXED: تحسين عرض رسالة النجاح وحل مشكلة التداخل
+        
+        // إخفاء أي رسائل خطأ أولاً
+        hideMessages();
+        
+        // إظهار تأثير الفرقعة المحسن
+        createYouTubeStyleConfetti();
+        
+        // إضافة صوت نجاح (اختياري)
+        playSuccessSound();
+        
+        // تنظيف المحتوى السابق
+        $('#magoarab-success-message').removeClass('success-with-youtube-confetti');
+        $('#magoarab-product-details').empty();
+        
+        // إظهار رسالة النجاح مع تفاصيل صحيحة
+        $('#magoarab-success-text').html(`
+            <div class="success-header">
+                <i class="fa fa-check-circle"></i>
+                <h3>${message}</h3>
+            </div>
+        `);
+        
+        if (orderNumber) {
+            $('#magoarab-order-number').html(`
+                <div class="order-info">
+                    <span class="label">رقم الطلب:</span>
+                    <span class="value">${orderNumber}</span>
+                </div>
+            `);
+        }
+        
+        // إضافة تفاصيل المنتج بشكل منظم
+        if (productDetails && productDetails.length > 0) {
+            var productDetailsHtml = '<div class="ordered-products">';
+            productDetailsHtml += '<h4><i class="fa fa-list"></i> تفاصيل المنتجات المطلوبة:</h4>';
+            
+            productDetails.forEach(function(product, index) {
+                productDetailsHtml += `
+                    <div class="product-item" data-index="${index}">
+                        <div class="product-header">
+                            <div class="product-name">
+                                <i class="fa fa-cube"></i>
+                                <strong>${product.name}</strong>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="info-row">
+                                <span class="qty">
+                                    <i class="fa fa-sort-numeric-asc"></i>
+                                    الكمية: <strong>${product.qty}</strong>
+                                </span>
+                                <span class="price">
+                                    <i class="fa fa-money"></i>
+                                    السعر الإجمالي: <strong>${product.row_total}</strong>
+                                </span>
+                                <span class="unit-price">
+                                    <i class="fa fa-tag"></i>
+                                    سعر الوحدة: <strong>${product.price}</strong>
+                                </span>
+                            </div>
+                        </div>
+                `;
+                
+                // إضافة الخصائص للمنتجات المتعددة
+                if (product.attributes && product.attributes.length > 0) {
+                    productDetailsHtml += '<div class="product-attributes">';
+                    product.attributes.forEach(function(attr) {
+                        productDetailsHtml += `
+                            <span class="attribute">
+                                <i class="fa fa-tag"></i>
+                                ${attr.label}: <strong>${attr.value}</strong>
+                            </span>
+                        `;
+                    });
+                    productDetailsHtml += '</div>';
+                }
+                
+                // إضافة الخيارات المخصصة
+                if (product.custom_options && product.custom_options.length > 0) {
+                    productDetailsHtml += '<div class="custom-options">';
+                    product.custom_options.forEach(function(option) {
+                        productDetailsHtml += `
+                            <span class="option">
+                                <i class="fa fa-cog"></i>
+                                ${option.label}: <strong>${option.value}</strong>
+                            </span>
+                        `;
+                    });
+                    productDetailsHtml += '</div>';
+                }
+                
+                productDetailsHtml += '</div>';
+            });
+            
+            productDetailsHtml += '</div>';
+            $('#magoarab-product-details').html(productDetailsHtml);
+        }
+
+        // إضافة ملخص الطلب النهائي - الأولوية للقيم المحفوظة قبل الإرسال
+        if (prePlaceOrderSummary || (summary && typeof summary === 'object')) {
+            try {
+                var summaryHtml = '<div class="order-summary success-summary">';
+                summaryHtml += '<h4><i class="fa fa-calculator"></i> ملخص الطلب</h4>';
+
+                // استخدام القيم المحفوظة إن وُجدت، وإلا من الاستجابة
+                if (prePlaceOrderSummary) {
+                    summaryHtml += '\n<div class="summary-row">\n  <span class="label">سعر الوحدة:</span>\n  <span class="value">' + prePlaceOrderSummary.unitPrice + '</span>\n</div>';
+                    summaryHtml += '\n<div class="summary-row">\n  <span class="label">الكمية:</span>\n  <span class="value">' + prePlaceOrderSummary.qty + '</span>\n</div>';
+                    summaryHtml += '\n<div class="summary-row">\n  <span class="label">الإجمالي:</span>\n  <span class="value">' + prePlaceOrderSummary.subtotal + '</span>\n</div>';
+                    summaryHtml += '\n<div class="summary-row" id="magoarab-shipping-cost-row-success">\n  <span class="label">تكلفة الشحن:</span>\n  <span class="value" id="magoarab-shipping-cost-success">' + prePlaceOrderSummary.shipping + '</span>\n</div>';
+                    
+                    if (prePlaceOrderSummary.discount && prePlaceOrderSummary.discount !== '-') {
+                        summaryHtml += '\n<div class="summary-row" id="magoarab-discount-row-success">\n  <span class="label">الخصم:</span>\n  <span class="value" id="magoarab-discount-amount-success">' + prePlaceOrderSummary.discount + '</span>\n</div>';
+                    }
+                    
+                    summaryHtml += '\n<div class="summary-row total-row">\n  <span class="label">الإجمالي النهائي:</span>\n  <span class="value" id="magoarab-order-total-success">' + prePlaceOrderSummary.grandTotal + '</span>\n</div>';
+                } else if (summary) {
+                    // Fallback to response summary
+                    var firstItem = (productDetails && productDetails.length > 0) ? productDetails[0] : null;
+                    var unitPrice = firstItem ? firstItem.price : null;
+                    var qty = firstItem ? firstItem.qty : null;
+
+                    if (unitPrice) {
+                        summaryHtml += '\n<div class="summary-row">\n  <span class="label">سعر الوحدة:</span>\n  <span class="value">' + unitPrice + '</span>\n</div>';
+                    }
+                    if (qty) {
+                        summaryHtml += '\n<div class="summary-row">\n  <span class="label">الكمية:</span>\n  <span class="value">' + qty + '</span>\n</div>';
+                    }
+                    if (summary.subtotal !== undefined) {
+                        summaryHtml += '\n<div class="summary-row">\n  <span class="label">الإجمالي:</span>\n  <span class="value">' + summary.subtotal + '</span>\n</div>';
+                    }
+                    if (summary.shipping !== undefined) {
+                        summaryHtml += '\n<div class="summary-row" id="magoarab-shipping-cost-row-success">\n  <span class="label">تكلفة الشحن:</span>\n  <span class="value" id="magoarab-shipping-cost-success">' + summary.shipping + '</span>\n</div>';
+                    }
+                    
+                    var discountRaw = summary.discount ? summary.discount.toString().replace(/[^\d.-]/g, '') : '0';
+                    var discountHasValue = Math.abs(parseFloat(discountRaw || '0')) > 0;
+                    if (discountHasValue) {
+                        summaryHtml += '\n<div class="summary-row" id="magoarab-discount-row-success">\n  <span class="label">الخصم:</span>\n  <span class="value" id="magoarab-discount-amount-success">' + summary.discount + '</span>\n</div>';
+                    }
+                    
+                    if (summary.total !== undefined) {
+                        summaryHtml += '\n<div class="summary-row total-row">\n  <span class="label">الإجمالي النهائي:</span>\n  <span class="value" id="magoarab-order-total-success">' + summary.total + '</span>\n</div>';
+                    }
+                }
+                
+                summaryHtml += '</div>';
+
+                // إلحاق ملخص الطلب بعد تفاصيل المنتجات
+                $('#magoarab-product-details').append(summaryHtml);
+                
+                // Log للمقارنة
+                if (response.quote_values) {
+                    console.log('Quote vs Order comparison:', {
+                        quote: response.quote_values,
+                        order: response.order_data,
+                        displayed: prePlaceOrderSummary
+                    });
+                }
+            } catch (e) {
+                console.error('Error displaying order summary:', e);
+            }
+        }
+        
+        // إظهار الرسالة مع تأثير محسن
+        $('#magoarab-success-message')
+            .addClass('success-with-youtube-confetti')
+            .css({
+                'opacity': 0,
+                'transform': 'scale(0.8)'
+            })
+            .show()
+            .animate({
+                opacity: 1
+            }, 300)
+            .animate({
+                transform: 'scale(1)'
+            }, 200);
+        
+        // التمرير إلى الرسالة مع تأثير ناعم
+        $('html, body').animate({
+            scrollTop: $('#magoarab-success-message').offset().top - 100
+        }, 800, 'easeInOutQuad');
+        
+        // إزالة كلاس التأثير بعد 5 ثوانٍ
+        setTimeout(() => {
+            $('#magoarab-success-message').removeClass('success-with-youtube-confetti');
+        }, 5000);
+        
+        // تم إزالة إخفاء النموذج - نتركه ظاهر دائماً
+        // setTimeout(function() {
+        //     $('#magoarab-easyorder-form').fadeOut(500);
+        // }, 50000);
+        
+        // إضافة زر إغلاق يدوي بعد 10 ثواني
+        setTimeout(function() {
+            if (!$('#manual-close-btn').length) {
+                var closeBtn = $('<button id="manual-close-btn" type="button" class="close-success-btn" style="position: absolute; top: 10px; right: 10px; background: #ff4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; z-index: 1000;">×</button>');
+                closeBtn.on('click', function() {
+                    // فقط إخفاء رسالة النجاح وليس الفورم
+                    $('#magoarab-success-message').fadeOut(500);
+                });
+                $('#magoarab-success-message').css('position', 'relative').append(closeBtn);
+            }
+        }, 10000); // 10 ثواني
+    }
+    
+    function playSuccessSound() {
+        // إنشاء صوت نجاح بسيط باستخدام Web Audio API
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (e) {
+            // تجاهل الأخطاء إذا لم يكن الصوت مدعوماً
+        }
+    }
+});
+</script>
+
+<?php 
+// إضافة الـ CSS المخصص
+$customCss = $block->getHelperData()->getCustomCss();
+if (!empty($customCss)): 
+?>
+<style type="text/css">
+/* Custom CSS from Admin Configuration */
+<?= $customCss ?>
+
+/* إضافة CSS للتحسينات الجديدة */
+.extended-disabled {
+    background: #6c757d !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+.disabled-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.countdown-timer {
+    font-size: 12px;
+    color: #fff;
+    background: rgba(0,0,0,0.2);
+    padding: 5px 10px;
+    border-radius: 3px;
+    margin-top: 5px;
+}
+
+.re-enabled {
+    animation: reEnabledPulse 1s ease-in-out;
+    background: #28a745 !important;
+}
+
+@keyframes reEnabledPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.enabled-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-message {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ========================================================================
+   TOGGLE SECTIONS - COMPACT & MODERN DESIGN
+   ======================================================================== */
+
+/* FIXED: Enhanced Toggle Sections Styling */
+.easyorder-toggle-section {
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+.easyorder-toggle-section.coupon-section {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(to right, #f0fdfa 0%, #ffffff 100%);
+}
+
+.easyorder-toggle-section:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+/* FIXED: Enhanced Toggle Header */
+.toggle-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: none;
+    padding: 18px 24px;
+    cursor: pointer !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    user-select: none;
+    position: relative;
+    min-height: 65px;
+}
+
+.toggle-header:focus,
+.toggle-header:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.toggle-header:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+    border-color: #cbd5e1;
+    transform: translateY(-1px); /* FIXED: Visual feedback */
+}
+
+.toggle-header.active {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    color: #1e40af;
+}
+
+.toggle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    flex-shrink: 0; /* FIXED: Prevent shrinking */
+}
+
+.toggle-header.active .toggle-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.toggle-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: #374151;
+    transition: color 0.3s ease;
+    pointer-events: none; /* FIXED: Prevent text selection interference */
+}
+
+.toggle-header.active .toggle-text {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.toggle-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    flex-shrink: 0; /* FIXED: Prevent shrinking */
+}
+
+.toggle-header.active .toggle-arrow {
+    transform: rotate(180deg);
+    color: #1e40af;
+}
+
+.toggle-content {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-top: none;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* FIXED: Smoother animation */
+    max-height: 0;
+    opacity: 0;
+}
+
+.toggle-content.active {
+    padding: 20px;
+    max-height: 500px;
+    opacity: 1;
+    border-color: #3b82f6;
+}
+
+.toggle-content .field-group {
+    margin: 0;
+}
+
+.toggle-content .field-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.required-indicator {
+    color: #ef4444;
+    margin-left: 4px;
+}
+
+/* ========================================================================
+   ENHANCED FORM FIELDS FOR TOGGLE SECTIONS
+   ======================================================================== */
+
+.toggle-content .order-note-textarea,
+.toggle-content .coupon-input {
+    width: 100% !important;
+    padding: 14px 16px !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    background: #ffffff !important;
+    transition: all 0.3s ease !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.toggle-content .order-note-textarea {
+    min-height: 80px !important;
+    resize: vertical !important;
+}
+
+.toggle-content .order-note-textarea:focus,
+.toggle-content .coupon-input:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 
+        inset 0 1px 3px rgba(0, 0, 0, 0.05),
+        0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    background: #ffffff !important;
+}
+
+.toggle-content .order-note-textarea:hover:not(:focus),
+.toggle-content .coupon-input:hover:not(:focus) {
+    border-color: #d1d5db !important;
+}
+
+.toggle-content .order-note-textarea::placeholder,
+.toggle-content .coupon-input::placeholder {
+    color: #9ca3af !important;
+    font-style: italic !important;
+}
+
+.order-note-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.note-hint {
+    color: #6b7280 !important;
+    font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin: 0 !important;
+}
+
+.note-hint i {
+    color: #3b82f6 !important;
+    font-size: 13px !important;
+}
+
+.char-counter {
+    font-size: 11px !important;
+    color: #9ca3af !important;
+    font-weight: 500 !important;
+    padding: 3px 6px !important;
+    background: #f9fafb !important;
+    border-radius: 4px !important;
+    border: 1px solid #e5e7eb !important;
+    transition: all 0.3s ease !important;
+    display: inline-block !important;
+    min-width: 45px !important;
+    text-align: center !important;
+}
+
+.char-counter.warning {
+    color: #d97706 !important;
+    background: #fef3c7 !important;
+    border-color: #fbbf24 !important;
+}
+
+.char-counter.danger {
+    color: #dc2626 !important;
+    background: #fee2e2 !important;
+    border-color: #f87171 !important;
+}
+
+/* Coupon input container in toggle */
+.toggle-content .coupon-input-container {
+    display: flex;
+    align-items: stretch;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.toggle-content .coupon-input-container:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 
+        inset 0 1px 3px rgba(0, 0, 0, 0.05),
+        0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.toggle-content .coupon-input {
+    flex: 1 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.toggle-content .coupon-apply-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 14px 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    border-radius: 0 !important;
+}
+
+.toggle-content .coupon-apply-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+}
+
+.toggle-content .coupon-status {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.toggle-content .coupon-status.success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.toggle-content .coupon-status.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.toggle-content .coupon-status.loading {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+/* Responsive adjustments for toggle sections */
+@media (max-width: 768px) {
+    .toggle-header {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+    
+    .toggle-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+    }
+    
+    .toggle-text {
+        font-size: 14px;
+    }
+    
+    .toggle-content.active {
+        padding: 16px;
+    }
+    
+    .toggle-content .coupon-input-container {
+        flex-direction: column;
+        border-radius: 6px;
+    }
+    
+    .toggle-content .coupon-input {
+        border-radius: 6px 6px 0 0 !important;
+        border-bottom: 1px solid #e5e7eb !important;
+    }
+    
+    .toggle-content .coupon-apply-btn {
+        border-radius: 0 0 6px 6px !important;
+        justify-content: center !important;
+        padding: 12px 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .toggle-header {
+        padding: 12px 14px;
+    }
+    
+    .toggle-content.active {
+        padding: 14px;
+    }
+    
+    .toggle-content .order-note-textarea,
+    .toggle-content .coupon-input {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+    }
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    console.log('Initializing EasyOrder enhancements...');
+    
+    // =======================================================================
+    // FIXED: Toggle Sections Functionality
+    // =======================================================================
+    
+         // CRITICAL FIX: Enhanced toggle functionality with proper event handling
+     $(document).off('click keydown', '.toggle-header'); // Remove existing handlers
+     
+     $(document).on('click keydown', '.toggle-header', function(e) {
+         // Handle both click and Enter/Space key
+         if (e.type === 'keydown' && e.which !== 13 && e.which !== 32) {
+             return;
+         }
+         
+         e.preventDefault();
+         e.stopPropagation();
+         
+         console.log('🎯 Toggle activated!', e.type);
+         
+         const $header = $(this);
+         const toggleType = $header.attr('data-toggle');
+         let $content;
+         
+         // Try different ID patterns to find the content
+         if (toggleType === 'coupon-code') {
+             $content = $('#coupon-code-content');
+         } else if (toggleType === 'order-note') {
+             $content = $('#order-note-content');
+         } else {
+             $content = $('#' + toggleType + '-content');
+         }
+         
+         const $arrow = $header.find('.toggle-arrow i');
+         
+         console.log('Toggle debug:', {
+             toggleType: toggleType,
+             contentExists: $content.length > 0,
+             isActive: $header.hasClass('active'),
+             arrowFound: $arrow.length > 0,
+             contentId: $content.attr('id')
+         });
+         
+         if ($content.length === 0) {
+             console.error('❌ Content not found for toggle:', toggleType);
+             return;
+         }
+         
+         // Toggle functionality
+         const isCurrentlyActive = $header.hasClass('active');
+         
+         if (isCurrentlyActive) {
+             // Hide content
+             $header.removeClass('active').attr('aria-expanded', 'false');
+             $content.slideUp(300, function() {
+                 $content.removeClass('active');
+             });
+             $arrow.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+             console.log('✅ Content hidden');
+         } else {
+             // Show content
+             $header.addClass('active').attr('aria-expanded', 'true');
+             $content.slideDown(300, function() {
+                 $content.addClass('active');
+                 // Focus first input when content is fully shown
+                 setTimeout(function() {
+                     $content.find('input, textarea').first().focus();
+                 }, 100);
+             });
+             $arrow.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+             console.log('✅ Content shown');
+         }
+     });
+    
+    // =======================================================================
+    // FIXED: Character Counter Functionality
+    // =======================================================================
+    
+    // Enhanced character counter with proper event delegation
+    function setupCharacterCounter() {
+        console.log('Setting up character counters...');
+        
+        // Remove existing handlers to prevent duplicates
+        $(document).off('input keyup paste change', 'textarea[name="order_note"]');
+        
+        // Use event delegation for dynamic content with multiple event types
+        $(document).on('input keyup paste change', 'textarea[name="order_note"]', function(e) {
+            const $textarea = $(this);
+            const currentLength = $textarea.val().length;
+            const maxLength = parseInt($textarea.attr('maxlength')) || 500;
+            
+            console.log('Character count update:', {
+                current: currentLength,
+                max: maxLength,
+                textarea_id: $textarea.attr('id'),
+                event: e.type
+            });
+            
+            // Find ALL counter elements - more robust approach
+            let $counterElements = $('.order-note-counter');
+            
+            // If none found, look in the DOM more broadly
+            if ($counterElements.length === 0) {
+                $counterElements = $textarea.closest('form').find('.order-note-counter');
+            }
+            
+            // Last resort: look in the specific container
+            if ($counterElements.length === 0) {
+                $counterElements = $textarea.closest('.easyorder-toggle-section, .easyorder-section').find('.order-note-counter');
+            }
+            
+            if ($counterElements.length > 0) {
+                // Update ALL counter elements
+                $counterElements.text(currentLength);
+                
+                // Update styling based on length for all char-counter elements
+                const $charCounters = $('.char-counter');
+                $charCounters.removeClass('warning danger');
+                
+                if (currentLength > maxLength * 0.8) {
+                    $charCounters.addClass('warning');
+                }
+                if (currentLength >= maxLength) {
+                    $charCounters.addClass('danger');
+                    // Prevent further input
+                    if (currentLength > maxLength) {
+                        $textarea.val($textarea.val().substring(0, maxLength));
+                        $counterElements.text(maxLength);
+                    }
+                }
+                
+                console.log('✅ Counter updated successfully:', currentLength, 'elements found:', $counterElements.length);
+            } else {
+                console.error('❌ Counter element not found for textarea:', $textarea.attr('id'));
+                console.log('Available elements:', $('.char-counter').length, $('.order-note-counter').length);
+            }
+        });
+        
+        // Sync all order note textareas to have the same value
+        $(document).on('input', 'textarea[name="order_note"]', function() {
+            const value = $(this).val();
+            // Update all other textareas with the same name but don't trigger input event to avoid infinite loop
+            $('textarea[name="order_note"]').not(this).each(function() {
+                if ($(this).val() !== value) {
+                    $(this).val(value);
+                }
+            });
+        });
+        
+        // Initialize counters for existing textareas with a slight delay
+        setTimeout(function() {
+            $('textarea[name="order_note"]').each(function() {
+                $(this).trigger('input');
+            });
+        }, 200);
+    }
+    
+    // Initialize character counter
+    setupCharacterCounter();
+    
+    // Re-initialize when toggle content is shown
+    $(document).on('click', '.toggle-header', function() {
+        setTimeout(setupCharacterCounter, 400);
+    });
+    
+    // =======================================================================
+    // INITIALIZATION - Ensure proper default states
+    // =======================================================================
+    
+    // Ensure all toggle sections start collapsed
+    setTimeout(function() {
+        $('.easyorder-toggle-section .toggle-content').hide();
+        $('.easyorder-toggle-section .toggle-header').removeClass('active').attr('aria-expanded', 'false');
+        $('.easyorder-toggle-section .toggle-arrow i').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        console.log('✅ Toggle sections initialized as collapsed');
+    }, 50);
+    
+    // =======================================================================
+    // Enhanced Shipping Method Change Handler
+    // =======================================================================
+    
+    $(document).on('change', 'input[name="shipping_method"]', function() {
+        const $selectedMethod = $(this);
+        const price = parseFloat($selectedMethod.data('price')) || 0;
+        const priceFormatted = $selectedMethod.data('price-formatted') || 'مجاني';
+        
+        console.log('Shipping method changed:', {
+            method: $selectedMethod.val(),
+            price: price,
+            formatted: priceFormatted
+        });
+        
+        // Update shipping cost immediately
+        $('#magoarab-shipping-cost').text(priceFormatted);
+        
+        // Trigger full calculation for rules (free shipping, etc.)
+        if (typeof optimizedUpdateCalculation === 'function') {
+            optimizedUpdateCalculation();
+        }
+    });
+    
+    console.log('EasyOrder enhancements initialized successfully!');
+});
+    
+    // =======================================================================
+    // COUPON CODE FUNCTIONALITY
+    // =======================================================================
+    
+    const applyCouponBtn = document.getElementById('magoarab-apply-coupon');
+    const couponInput = document.getElementById('magoarab-coupon-code');
+    const couponStatus = document.getElementById('magoarab-coupon-status');
+    
+    if (applyCouponBtn && couponInput && couponStatus) {
+        // Apply coupon functionality
+        applyCouponBtn.addEventListener('click', function() {
+            const couponCode = couponInput.value.trim();
+            
+            if (!couponCode) {
+                showCouponStatus('error', 'يرجى إدخال كود الخصم أولاً');
+                return;
+            }
+            
+            // Show loading state
+            applyCouponBtn.classList.add('loading');
+            applyCouponBtn.innerHTML = '<i class="fa fa-spinner"></i> جارٍ التطبيق...';
+            showCouponStatus('loading', 'جارٍ التحقق من كود الخصم...');
+            
+            // Apply coupon by triggering recalculation with coupon
+            const qtyInput = document.getElementById('magoarab-easyorder-qty');
+            if (qtyInput && typeof calculateOrderTotals === 'function') {
+                calculateOrderTotals();
+                
+                setTimeout(function() {
+                    showCouponStatus('success', 'سيتم تطبيق كود الخصم عند إنشاء الطلب');
+                    applyCouponBtn.classList.remove('loading');
+                    applyCouponBtn.innerHTML = '<i class="fa fa-check"></i> مُطبق';
+                    applyCouponBtn.disabled = true;
+                    applyCouponBtn.style.opacity = '0.7';
+                    couponInput.disabled = true;
+                }, 1000);
+            } else {
+                setTimeout(function() {
+                    showCouponStatus('success', 'سيتم تطبيق كود الخصم عند إنشاء الطلب');
+                    applyCouponBtn.classList.remove('loading');
+                    applyCouponBtn.innerHTML = '<i class="fa fa-check"></i> مُطبق';
+                }, 1000);
+            }
+        });
+        
+        // Enter key support
+        couponInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyCouponBtn.click();
+            }
+        });
+        
+        // Clear status when typing
+        couponInput.addEventListener('input', function() {
+            if (couponStatus.style.display !== 'none') {
+                couponStatus.style.display = 'none';
+            }
+            // Reset button if user changes coupon
+            if (applyCouponBtn.disabled) {
+                applyCouponBtn.disabled = false;
+                applyCouponBtn.style.opacity = '1';
+                applyCouponBtn.innerHTML = '<i class="fa fa-check"></i> تطبيق';
+                couponInput.disabled = false;
+            }
+        });
+    }
+    
+    function showCouponStatus(type, message) {
+        if (couponStatus) {
+            couponStatus.className = 'coupon-status ' + type;
+            couponStatus.innerHTML = '<i class="fa fa-' + 
+                (type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' : 'spinner') + 
+                '"></i> ' + message;
+            couponStatus.style.display = 'flex';
+        }
+    }
+});
+</script>
+</style>
+<?php endif; ?>
